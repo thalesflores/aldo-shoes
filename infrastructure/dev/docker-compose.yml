@@ -12,7 +12,6 @@ services:
     volumes:
       - ../..:/aldo-shoes
       - rubygems:/usr/local/bundle/
-
     depends_on:
       - db
   db:
@@ -23,6 +22,19 @@ services:
     container_name: aldo-shoes-db
     environment:
       POSTGRES_PASSWORD: postgres
+
+  inventory:
+    image: ruby:alpine3.17
+    restart: always
+    container_name: inventory_service
+    working_dir: /inventory_service
+    command: /bin/sh -c "apk update && apk add websocketd && websocketd --port=8080 ruby ./inventory.rb"
+    volumes:
+      - ../../inventory_service:/inventory_service
+    ports:
+      - 8080:8080
+    depends_on:
+      - web
 
 volumes:
   rubygems:
