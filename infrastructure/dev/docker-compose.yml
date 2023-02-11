@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aldo-shoes
+    command: bash -c "bundle install && rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../..:/aldo-shoes
+      - rubygems:/usr/local/bundle/
+
+    depends_on:
+      - db
+  db:
+    image: postgres:15.2
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    restart: always
+    container_name: aldo-shoes-db
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+volumes:
+  rubygems:
