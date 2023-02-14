@@ -18,6 +18,56 @@ module Inventories
       end
     end
 
+    def transfer(from_store_inventory:, to_store_id:, product_id:, quantity:)
+      in_sequence do
+        get(:to_store_inventory) { store_inventory_by_id(to_store_id, product_id) }
+        get(:inventories) { execute_transfer(from_store_inventory, to_store_inventory, quantity) }
+        and_yield { transfer_response(inventories) }
+      end
+    end
+
+    def store_inventory_by_id(from_store_id, product_id)
+      inventory = Inventory.find_by_store_and_product(from_store_id, product_id)
+
+      inventory ? Success(inventory) : Failure(message: 'Destination store not found', code: :not_found)
+    end
+
+    def execute_transfer(from_store_inventory, to_store_inventory, quantity)
+      ActiveRecord::Base.transaction do
+        from_store_inventory.quantity -= quantity
+
+        raise Inventory::InsufficientQuantity if (from_store_inventory.quantity - quantity).negative?
+
+        to_store_inventory.quantity += quantity
+
+        from_store_inventory.save!
+        to_store_inventory.save!
+        Success(to_store_inventory:, from_store_inventory:)
+
+      rescue Inventory::InsufficientQuantity
+        Failure(message: "You can't transfer more units than you have in the inventory")
+      end
+    end
+
+    def transfer_response(inventories)
+      Success({
+                origin_store: bulild_transfer_response(inventories[:from_store_inventory]),
+                destination_store: bulild_transfer_response(inventories[:to_store_inventory])
+              })
+    end
+
+    def bulild_transfer_response(inventory)
+      {
+        id: inventory.store.id,
+        name: inventory.store.name,
+        product: {
+          id: inventory.product.id,
+          model: inventory.product.model,
+          inventory: inventory.quantity
+        }
+      }
+    end
+
     def sanitaze_params(params)
       struct_params = OpenStruct.new(params)
 

@@ -28,4 +28,10 @@ class Inventory < ApplicationRecord
 
   validates :store_id, uniqueness: { scope: :product_id }
   validates :quantity, presence: { message: 'quantity can not be null' }
+
+  def self.find_by_store_and_product(store_id, product_id)
+    where(store_id:, product_id:).includes(:store).includes(:product).first
+  end
+
+  class InsufficientQuantity < StandardError; end
 end

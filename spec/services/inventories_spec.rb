@@ -50,4 +50,86 @@ RSpec.describe Inventories, type: :service do
       end
     end
   end
+
+  describe '#transfer' do
+    describe 'when the origin store has enough inventory quantity' do
+      let(:product) { create(:product) }
+      let(:origin_inventory) { create(:inventory, quantity: 10, product:) }
+      let(:destination_inventory) { create(:inventory, quantity: 5, product:) }
+      let(:params) do
+        { from_store_inventory: origin_inventory, to_store_id: destination_inventory.store.id,
+          product_id: origin_inventory.product_id, quantity: 2 }
+      end
+      let(:expected_response) do
+        {
+          origin_store: {
+            id: origin_inventory.store.id,
+            name: origin_inventory.store.name,
+            product: {
+              id: origin_inventory.product.id,
+              model: origin_inventory.product.model,
+              inventory: 8
+            }
+          },
+          destination_store: {
+            id: destination_inventory.store.id,
+            name: destination_inventory.store.name,
+            product: {
+              id: destination_inventory.product.id,
+              model: destination_inventory.product.model,
+              inventory: 7
+            }
+          }
+        }
+      end
+
+      it 'transfers the inventory between the two stores' do
+        result = Inventories.transfer(**params)
+
+        expect(result).to be_a Deterministic::Result::Success
+        expect(origin_inventory.reload.quantity).to eq(8)
+        expect(destination_inventory.reload.quantity).to eq(7)
+
+        result_content = result.value
+        expect(result_content).to eq(expected_response)
+      end
+    end
+
+    describe 'when the origin store tries to transfer more inventory than it has' do
+      let(:product) { create(:product) }
+      let(:origin_inventory) { create(:inventory, quantity: 10, product:) }
+      let(:destination_inventory) { create(:inventory, quantity: 5, product:) }
+      let(:params) do
+        { from_store_inventory: origin_inventory, to_store_id: destination_inventory.store.id,
+          product_id: origin_inventory.product_id, quantity: 11 }
+      end
+
+      it 'returns Failure with a error message' do
+        result = Inventories.transfer(**params)
+
+        expect(result).to be_a Deterministic::Result::Failure
+
+        result_content = result.value
+        expect(result_content[:message]).to eq("You can't transfer more units than you have in the inventory")
+      end
+    end
+
+    describe 'when passed an invalid to_store_id' do
+      let(:product) { create(:product) }
+      let(:origin_inventory) { create(:inventory, quantity: 10, product:) }
+      let(:params) do
+        { from_store_inventory: origin_inventory, to_store_id: 0,
+          product_id: origin_inventory.product_id, quantity: 1 }
+      end
+
+      it 'returns Failure with a error message' do
+        result = Inventories.transfer(**params)
+
+        expect(result).to be_a Deterministic::Result::Failure
+
+        result_content = result.value
+        expect(result_content[:message]).to eq('Destination store not found')
+      end
+    end
+  end
 end
