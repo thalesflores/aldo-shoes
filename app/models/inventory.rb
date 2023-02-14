@@ -26,12 +26,22 @@ class Inventory < ApplicationRecord
   belongs_to :store
   belongs_to :product
 
+  has_one :inventory_setting
+
   validates :store_id, uniqueness: { scope: :product_id }
   validates :quantity, presence: { message: 'quantity can not be null' }
+
+  after_create :create_settings
+
+  class InsufficientQuantity < StandardError; end
 
   def self.find_by_store_and_product(store_id, product_id)
     where(store_id:, product_id:).includes(:store).includes(:product).first
   end
 
-  class InsufficientQuantity < StandardError; end
+  private
+
+  def create_settings
+    InventorySetting.create(inventory: self)
+  end
 end

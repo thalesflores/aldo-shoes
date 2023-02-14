@@ -33,6 +33,12 @@ RSpec.describe Inventory, type: :model do
     expect(subject).to be_valid
   end
 
+  it 'creates settings automatically' do
+    expect(subject.inventory_setting).to be_valid
+    expect(subject.inventory_setting.high_quantity).to eq(100)
+    expect(subject.inventory_setting.low_quantity).to eq(10)
+  end
+
   it 'is invalid with a non duplicated store and product' do
     Inventory.create(store:, product:)
     expect(subject).to_not be_valid
