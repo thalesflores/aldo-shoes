@@ -36,7 +36,7 @@ module Inventories
       ActiveRecord::Base.transaction do
         from_store_inventory.quantity -= quantity
 
-        raise Inventory::InsufficientQuantity if (from_store_inventory.quantity - quantity).negative?
+        raise Inventory::InsufficientQuantity if from_store_inventory.quantity.negative?
 
         to_store_inventory.quantity += quantity
 
