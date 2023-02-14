@@ -19,11 +19,14 @@ module Inventories
     end
 
     def sanitaze_params(params)
-      invalid_arguments = REQUIRED_ARGUMENTS.filter { |argument| params[argument].nil? }
+      struct_params = OpenStruct.new(params)
+
+      invalid_arguments = REQUIRED_ARGUMENTS.filter { |argument| struct_params[argument].nil? }
 
       return Failure("Missing required arguments: #{invalid_arguments}") unless invalid_arguments.blank?
 
-      Success({ store_name: params[:store], model_name: params[:model], inventory_quantity: params[:inventory] })
+      Success({ store_name: struct_params[:store], model_name: struct_params[:model],
+                inventory_quantity: struct_params[:inventory] })
     end
 
     def upsert_store(store)
