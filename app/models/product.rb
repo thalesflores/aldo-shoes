@@ -15,8 +15,8 @@
 #  index_products_on_model  (model) UNIQUE
 #
 class Product < ApplicationRecord
-  has_many :store
-  has_many :inventories, through: :store
+  has_many :inventories, dependent: :restrict_with_exception
+  has_many :stores, through: :inventories
 
   validates :model, uniqueness: true
   validates :model, presence: true

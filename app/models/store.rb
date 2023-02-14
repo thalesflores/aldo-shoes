@@ -14,8 +14,8 @@
 #  index_stores_on_name  (name) UNIQUE
 #
 class Store < ApplicationRecord
-  has_many :products
-  has_many :inventories, through: :products
+  has_many :inventories, dependent: :restrict_with_exception
+  has_many :products, through: :inventories
 
   validates :name, uniqueness: true
   validates :name, presence: true

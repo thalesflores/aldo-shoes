@@ -15,6 +15,6 @@
 #
 FactoryBot.define do
   factory :store do
-    name { 'ALDO test' }
+    name { Faker::Creature::Cat.name }
   end
 end

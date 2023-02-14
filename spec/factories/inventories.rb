@@ -24,7 +24,7 @@
 #
 FactoryBot.define do
   factory :inventory do
-    quantity { 1 }
+    quantity { rand(1..100) }
     store { create(:store) }
     product { create(:product) }
   end
