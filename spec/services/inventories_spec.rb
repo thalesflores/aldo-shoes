@@ -1,0 +1,53 @@
+require 'rails_helper'
+
+RSpec.describe Inventories, type: :service do
+  include Deterministic
+  describe '#update_inventory' do
+    describe 'when passing a new store and product' do
+      let(:store) { 'Aldo Test Store' }
+      let(:model) { 'Shoe test' }
+      let(:inventory_quantity) { 10 }
+      let(:params) { { store:, model:, inventory: inventory_quantity } }
+      it 'creates the store, the product and add the inventory total' do
+        result = Inventories.update_inventory(params)
+
+        expect(result).to be_a Deterministic::Result::Success
+
+        result_content = result.value
+
+        expect(result_content[:inventory]).to be_a Inventory
+        expect(result_content[:store]).to be_a Store
+        expect(result_content[:product]).to be_a Product
+      end
+
+      it 'creates the store with the correct name' do
+        result = Inventories.update_inventory(params)
+        store_response = result.value[:store]
+
+        expect(result).to be_a Deterministic::Result::Success
+        expect(store_response.name).to eq(store)
+      end
+
+      it 'creates the product with the correct name' do
+        result = Inventories.update_inventory(**params)
+        product_response = result.value[:product]
+
+        expect(result).to be_a Deterministic::Result::Success
+        expect(product_response.model).to eq(model)
+        expect(product_response.category).to eq('shoes')
+      end
+
+      it 'creates the inventory with the correct quantity and relations' do
+        result = Inventories.update_inventory(**params)
+        inventory_response = result.value[:inventory]
+        product_response = result.value[:product]
+        store_response = result.value[:store]
+
+        expect(result).to be_a Deterministic::Result::Success
+        expect(inventory_response.quantity).to eq(inventory_quantity)
+        expect(inventory_response.store_id).to eq(store_response.id)
+        expect(inventory_response.product_id).to eq(product_response.id)
+      end
+    end
+  end
+end
