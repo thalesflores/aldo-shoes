@@ -36,7 +36,7 @@ class Inventory < ApplicationRecord
   class InsufficientQuantity < StandardError; end
 
   def self.find_by_store_and_product(store_id, product_id)
-    where(store_id:, product_id:).includes(:store).includes(:product).first
+    where(store_id:, product_id:).includes(:store).includes(:product).includes(:inventory_setting).first
   end
 
   private
