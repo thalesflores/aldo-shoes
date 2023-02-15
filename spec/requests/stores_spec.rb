@@ -7,8 +7,8 @@ RSpec.describe StoresController, type: :request do
       let!(:store) { inventory.store }
       let!(:product) { inventory.product }
       let!(:expected_response) do
-        [{ id: store.id, name: store.name,
-           products: [{ id: product.id, model: product.model, inventory: inventory.quantity }] }]
+        { stores: [{ id: store.id, name: store.name,
+                     products: [{ id: product.id, model: product.model, inventory: inventory.quantity }] }] }
       end
 
       it 'returns success code with only ony store and its inventory' do
@@ -26,8 +26,8 @@ RSpec.describe StoresController, type: :request do
       let!(:store) { inventory.store }
       let!(:product) { inventory.product }
       let!(:expected_response) do
-        { id: store.id, name: store.name,
-          products: [{ id: product.id, model: product.model, inventory: inventory.quantity }] }
+        { store: { id: store.id, name: store.name,
+                   products: [{ id: product.id, model: product.model, inventory: inventory.quantity }] } }
       end
 
       it 'returns success code with the store and its inventory' do

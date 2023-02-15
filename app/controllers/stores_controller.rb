@@ -3,13 +3,13 @@ class StoresController < ApplicationController
     stores = Store.includes(:inventories).includes(:products).all
 
     response = stores.map { |store| build_response(store) }
-    render json: response
+    render json: { stores: response }
   end
 
   def show
     store = Store.find(params[:id])
 
-    render json: build_response(store)
+    render json: { store: build_response(store) }
   end
 
   private
