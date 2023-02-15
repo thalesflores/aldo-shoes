@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class InventoryTransfersController < ApplicationController
   include Deterministic::Prelude
 

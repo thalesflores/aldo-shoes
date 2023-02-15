@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class InventoryTransferSuggestionsController < ApplicationController
   before_action :find_store, only: [:show]
 

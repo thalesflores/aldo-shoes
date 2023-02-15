@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class StoresController < ApplicationController
   def index
     stores = Store.includes(:inventories).includes(:products).all
