@@ -26,6 +26,22 @@ module Inventories
       end
     end
 
+    def transfer_suggestions(store:)
+      in_sequence do
+        get(:receive_transfer_suggestions) { list_receive_transfer_suggestions(store.id) }
+        get(:send_transfer_suggestions) { list_send_transfer_suggestions(store.id) }
+        and_yield { transfer_suggestions_response(store, receive_transfer_suggestions, send_transfer_suggestions) }
+      end
+    end
+
+    def list_receive_transfer_suggestions(store_id)
+      Success(Inventory.receive_transfer_suggestions_by_store_id(store_id))
+    end
+
+    def list_send_transfer_suggestions(store_id)
+      Success(Inventory.send_transfer_suggestions_by_store_id(store_id))
+    end
+
     def store_inventory_by_id(from_store_id, product_id)
       inventory = Inventory.find_by_store_and_product(from_store_id, product_id)
 
@@ -64,6 +80,32 @@ module Inventories
           id: inventory.product.id,
           model: inventory.product.model,
           inventory: inventory.quantity
+        }
+      }
+    end
+
+    def transfer_suggestions_response(store, receive_transfer_suggestions, send_transfer_suggestions)
+      Success({
+                id: store.id,
+                name: store.name,
+                inventory_transfers_suggestions: {
+                  send_transfers: send_transfer_suggestions.map do |suggestion|
+                                    format_suggestion_response(suggestion.symbolize_keys)
+                                  end,
+                  receive_transfers: receive_transfer_suggestions.map do |suggestion|
+                                       format_suggestion_response(suggestion.symbolize_keys)
+                                     end
+                }
+              })
+    end
+
+    def format_suggestion_response(suggestion)
+      {
+        store: { id: suggestion[:store_id], name: suggestion[:store_name] },
+        product: {
+          id: suggestion[:product_id],
+          model: suggestion[:product_model],
+          quantity: suggestion[:transfer_suggestion]
         }
       }
     end
