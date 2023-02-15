@@ -1,6 +1,4 @@
-FROM ruby:3.1.2
-
-ENV ROOT=../..
+FROM ruby:3.2.1
 
 RUN apt-get update -qq && apt-get install -y  postgresql-client
 
