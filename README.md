@@ -53,6 +53,7 @@ To discovery, all possible actions, run `$ make help`.
 
 ## Possible next steps
 
+- Add a serializer for unifying the reponse format
 - Add a WebSocket with a notification whenever a store has a low/high inventory
 - Add GraphQL endpoint, enabling multiple ways for consuming the app data
 - Increase code coverage
