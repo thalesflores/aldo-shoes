@@ -30,7 +30,7 @@ services:
     networks:
       - database
 
-  inventory:
+  inventory_service:
     image: ruby:alpine3.17
     restart: always
     container_name: inventory_service
