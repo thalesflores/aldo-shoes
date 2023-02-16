@@ -1,97 +1,96 @@
-# frozen_string_literal: true
+require 'swagger_helper'
 
-require 'rails_helper'
+RSpec.describe 'inventory_transfers', type: :request do
+  path '/stores/{id}/inventories/transfers' do
+    post('Make an inventory transfer') do
+      tags 'Inventory'
+      consumes 'application/json'
 
-RSpec.describe InventoryTransfersController, type: :request do
-  describe 'POST /stores/:id/inventories/transfers' do
-    describe 'when the store has enough stock' do
-      let!(:inventory_store_one) { create(:inventory, quantity: 10) }
-      let!(:store_one) { inventory_store_one.store }
-      let!(:product) { inventory_store_one.product }
-      let!(:inventory_store_two) { create(:inventory, quantity: 1, product:) }
-      let!(:store_two) { inventory_store_two.store }
-      let(:request_body) { { product_id: product.id, quantity: 6, destination_store: store_two.id } }
+      parameter name: 'id', in: :path, type: :integer, description: 'id'
+      parameter name: 'transfer', in: :body, schema: {
+        type: :object,
+        properties: {
+          product_id: { type: :integer },
+          quantity: { type: :integer },
+          destination_store: { type: :integer }
+        },
 
-      let(:expected_response) do
-        {
-          transfer: {
-            origin_store: {
-              id: store_one.id,
-              name: store_one.name,
-              product: {
-                id: product.id,
-                model: product.model,
-                inventory: 4
-              }
-            },
-            destination_store: {
-              id: store_two.id,
-              name: store_two.name,
-              product: {
-                id: product.id,
-                model: product.model,
-                inventory: 7
-              }
+        required: %w[product_id quantity destination_store]
+      }
+
+      response(201, 'inventory transfered') do
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {
+              example: JSON.parse(response.body, symbolize_names: true)
             }
           }
-        }
+        end
+
+        let!(:inventory_store_one) { create(:inventory, quantity: 10) }
+        let!(:store_one) { inventory_store_one.store }
+        let!(:product) { inventory_store_one.product }
+        let!(:inventory_store_two) { create(:inventory, quantity: 1, product:) }
+        let!(:store_two) { inventory_store_two.store }
+
+        let(:id) { store_one.id }
+        let(:transfer) { { product_id: product.id, quantity: 6, destination_store: store_two.id } }
+
+        run_test!
       end
 
-      it 'transfers the inventory quantity to another store' do
-        post "/stores/#{store_one.id}/inventories/transfers", params: request_body
+      response(422, 'inventory with not enouhg items') do
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {
+              example: JSON.parse(response.body, symbolize_names: true)
+            }
+          }
+        end
 
-        expect(response).to have_http_status(201)
-        expect(response.body).to eq(expected_response.to_json)
-        expect(inventory_store_one.reload.quantity).to eq(4)
-        expect(inventory_store_two.reload.quantity).to eq(7)
+        let!(:inventory_store_one) { create(:inventory, quantity: 10) }
+        let!(:store_one) { inventory_store_one.store }
+        let!(:product) { inventory_store_one.product }
+        let!(:inventory_store_two) { create(:inventory, quantity: 1, product:) }
+        let!(:store_two) { inventory_store_two.store }
+
+        let(:id) { store_one.id }
+        let(:transfer) { { product_id: product.id, quantity: 99, destination_store: store_two.id } }
+
+        run_test!
       end
-    end
 
-    describe "when the store hasn't enough stock" do
-      let!(:inventory_store_one) { create(:inventory, quantity: 1) }
-      let!(:store_one) { inventory_store_one.store }
-      let!(:product) { inventory_store_one.product }
-      let!(:inventory_store_two) { create(:inventory, quantity: 1, product:) }
-      let!(:store_two) { inventory_store_two.store }
-      let(:request_body) { { product_id: product.id, quantity: 6, destination_store: store_two.id } }
-      let(:expected_response) { { message: "You can't transfer more units than you have in the inventory" } }
+      response(404, 'destination store does not exist') do
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {
+              example: JSON.parse(response.body, symbolize_names: true)
+            }
+          }
+        end
 
-      it 'returns 422 code with error message' do
-        post "/stores/#{store_one.id}/inventories/transfers", params: request_body
+        let!(:inventory) { create(:inventory, quantity: 10) }
+        let!(:store) { inventory.store }
+        let!(:product) { inventory.product }
 
-        expect(response).to have_http_status(422)
-        expect(response.body).to eq(expected_response.to_json)
-        expect(inventory_store_one.reload.quantity).to eq(1)
-        expect(inventory_store_two.reload.quantity).to eq(1)
+        let(:id) { store.id }
+        let(:transfer) { { product_id: product.id, quantity: 99, destination_store: 0 } }
+
+        run_test!
       end
-    end
 
-    describe "when the destination store doesn't exist" do
-      let!(:inventory_store_one) { create(:inventory, quantity: 1) }
-      let!(:store_one) { inventory_store_one.store }
-      let!(:product) { inventory_store_one.product }
-      let(:request_body) { { product_id: product.id, quantity: 6, destination_store: 0 } }
-      let(:expected_response) { { message: 'Destination store not found' } }
+      response(404, 'origin store does not exist') do
+        after do |example|
+          example.metadata[:response][:content] = { 'application/json' => {} }
+        end
 
-      it 'returns 404 code with error message' do
-        post "/stores/#{store_one.id}/inventories/transfers", params: request_body
+        let(:product) { create(:product) }
+        let(:destination_store) { create(:store) }
 
-        expect(response).to have_http_status(404)
-        expect(response.body).to eq(expected_response.to_json)
-        expect(inventory_store_one.reload.quantity).to eq(1)
-      end
-    end
+        let(:id) { 0 }
+        let(:transfer) { { product_id: product.id, quantity: 6, destination_store: destination_store.id } }
 
-    describe "when the origin store store doesn't exist" do
-      let(:product) { create(:product) }
-      let(:destination_store) { create(:store) }
-      let(:request_body) { { product_id: product.id, quantity: 6, destination_store: destination_store.id } }
-      let(:expected_response) { { message: 'Destination store not found' } }
-
-      it 'returns 404' do
-        post '/stores/0/inventories/transfers', params: request_body
-
-        expect(response).to have_http_status(404)
+        run_test!
       end
     end
   end

@@ -1,0 +1,201 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/stores/{id}/products/{product_id}/inventories/settings":
+    patch:
+      summary: inventory settings updated
+      tags:
+      - Inventory Settings
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        schema:
+          type: string
+      - name: product_id
+        in: path
+        description: product_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                store:
+                  id: 437
+                  name: Chicken790
+                  product:
+                    id: 341
+                    model: Chance627
+                    inventory: 72
+                    inventory_settings:
+                      high_quantity: 10
+                      low_quantity: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                low_quantity:
+                  type: integer
+                high_quantity:
+                  type: integer
+  "/stores/{id}/inventories/transfer_suggestions":
+    get:
+      summary: show suggestions about inventory transfers - to send and to receive
+      tags:
+      - Inventory
+      parameters:
+      - name: id
+        in: path
+        description: store id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                store:
+                  id: 438
+                  name: Chloe190
+                  inventory_transfers_suggestions:
+                    send_transfers:
+                    - store:
+                        id: 440
+                        name: Daisy836
+                      product:
+                        id: 343
+                        model: Snoopy690
+                        quantity: 99
+                    receive_transfers:
+                    - store:
+                        id: 439
+                        name: McFluffy Pants715
+                      product:
+                        id: 342
+                        model: Lucy220
+                        quantity: 91
+  "/stores/{id}/inventories/transfers":
+    post:
+      summary: Make an inventory transfer
+      tags:
+      - Inventory
+      parameters:
+      - name: id
+        in: path
+        description: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '201':
+          description: inventory transfered
+          content:
+            application/json:
+              example:
+                transfer:
+                  origin_store:
+                    id: 441
+                    name: Sir Loin144
+                    product:
+                      id: 344
+                      model: Snickers974
+                      inventory: 4
+                  destination_store:
+                    id: 442
+                    name: Jasper68
+                    product:
+                      id: 344
+                      model: Snickers974
+                      inventory: 7
+        '422':
+          description: inventory with not enouhg items
+          content:
+            application/json:
+              example:
+                message: You can't transfer more units than you have in the inventory
+        '404':
+          description: origin store does not exist
+          content:
+            application/json:
+              example:
+                message: Destination store not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: integer
+                quantity:
+                  type: integer
+                destination_store:
+                  type: integer
+              required:
+              - product_id
+              - quantity
+              - destination_store
+  "/stores":
+    get:
+      summary: list stores
+      tags:
+      - Stores
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                stores:
+                - id: 447
+                  name: Simba895
+                  products:
+                  - id: 348
+                    model: Roxie561
+                    inventory: 3
+  "/stores/{id}":
+    get:
+      summary: show store
+      tags:
+      - Stores
+      parameters:
+      - name: id
+        in: path
+        description: store id
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              example:
+                store:
+                  id: 448
+                  name: Lucy567
+                  products:
+                  - id: 349
+                    model: Scooter800
+                    inventory: 43
+        '404':
+          description: not found
+          content:
+            application/json: {}
+servers:
+- url: https://{defaultHost}
+  variables:
+    defaultHost:
+      default: www.example.com

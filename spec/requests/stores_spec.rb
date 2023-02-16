@@ -1,50 +1,56 @@
-# frozen_string_literal: true
+require 'swagger_helper'
 
-require 'rails_helper'
+RSpec.describe 'stores', type: :request do
+  path '/stores' do
+    get('list stores') do
+      tags 'Stores'
 
-RSpec.describe StoresController, type: :request do
-  describe 'GET /stores' do
-    describe 'when there is only one store' do
-      let!(:inventory) { create(:inventory) }
-      let!(:store) { inventory.store }
-      let!(:product) { inventory.product }
-      let!(:expected_response) do
-        { stores: [{ id: store.id, name: store.name,
-                     products: [{ id: product.id, model: product.model, inventory: inventory.quantity }] }] }
-      end
+      response(200, 'successful') do
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {
+              example: JSON.parse(response.body, symbolize_names: true)
+            }
+          }
+        end
 
-      it 'returns success code with only ony store and its inventory' do
-        get '/stores'
+        let!(:inventory) { create(:inventory) }
 
-        expect(response).to have_http_status(200)
-        expect(response.body).to eq(expected_response.to_json)
+        run_test!
       end
     end
   end
 
-  describe 'GET /stores/:id' do
-    describe 'when passed a valid store id' do
-      let!(:inventory) { create(:inventory) }
-      let!(:store) { inventory.store }
-      let!(:product) { inventory.product }
-      let!(:expected_response) do
-        { store: { id: store.id, name: store.name,
-                   products: [{ id: product.id, model: product.model, inventory: inventory.quantity }] } }
+  path '/stores/{id}' do
+    get('show store') do
+      tags 'Stores'
+      parameter name: 'id', in: :path, type: :integer, description: 'store id'
+
+      response(200, 'successful') do
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {
+              example: JSON.parse(response.body, symbolize_names: true)
+            }
+          }
+        end
+
+        let!(:inventory) { create(:inventory) }
+        let!(:id) { inventory.store.id }
+
+        run_test!
       end
 
-      it 'returns success code with the store and its inventory' do
-        get "/stores/#{store.id}"
+      response(404, 'not found') do
+        after do |example|
+          example.metadata[:response][:content] = {
+            'application/json' => {}
+          }
+        end
 
-        expect(response).to have_http_status(200)
-        expect(response.body).to eq(expected_response.to_json)
-      end
-    end
+        let!(:id) { 0 }
 
-    describe 'when passed an invalid store id' do
-      it 'returns not found' do
-        get '/stores/0'
-
-        expect(response).to have_http_status(404)
+        run_test!
       end
     end
   end

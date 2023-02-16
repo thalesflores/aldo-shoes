@@ -15,6 +15,6 @@
 #
 FactoryBot.define do
   factory :store do
-    name { Faker::Creature::Cat.name }
+    name { Faker::Creature::Cat.name + rand(1..1000).to_s}
   end
 end

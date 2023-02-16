@@ -16,7 +16,7 @@
 #
 FactoryBot.define do
   factory :product do
-    model { Faker::Creature::Dog.name }
+    model { Faker::Creature::Dog.name + rand(1..1000).to_s }
     category { 'shoe' }
   end
 end
