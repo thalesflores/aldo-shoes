@@ -6,24 +6,29 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: aldo-shoes
-    command: bash -c "bundle install && rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    command: sh -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
     ports:
       - "3000:3000"
-    volumes:
-      - ../..:/aldo-shoes
-      - rubygems:/usr/local/bundle/
+    env_file:
+      - .env
     depends_on:
       - db
+    networks:
+      - database
+      - inventory_service
+
   db:
     image: postgres:15.2
     volumes:
-      - ./tmp/db:/var/lib/postgresql/data
+      - database:/var/lib/postgresql/data
     restart: always
-    container_name: aldo-shoes-db
+    container_name: aldo-shoes-database
     ports:
-      - "5433:5432"
+      - "5434:5432"
     environment:
       POSTGRES_PASSWORD: postgres
+    networks:
+      - database
 
   inventory:
     image: ruby:alpine3.17
@@ -32,11 +37,17 @@ services:
     working_dir: /inventory_service
     command: /bin/sh -c "apk update && apk add websocketd && websocketd --port=8080 ruby ./inventory.rb"
     volumes:
-      - ../../inventory_service:/inventory_service
+      - ./inventory_service:/inventory_service
     ports:
       - 8080:8080
     depends_on:
       - web
+    networks:
+      - inventory_service
 
 volumes:
-  rubygems:
+  database:
+
+networks:
+  database:
+  inventory_service:
